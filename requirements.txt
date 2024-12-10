@@ -6,6 +6,7 @@ kornia
 open-clip-torch
 wandb
 braceexpand
-webdataset
+# TODO: perhaps >= it's ok for sure not 0.2.100 ❎. EOM - Victor
+webdataset==0.2.86
 pandas
 submitit

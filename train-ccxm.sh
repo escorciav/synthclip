@@ -15,7 +15,9 @@ CCxM_NUM_SAMPLES=2876999
 TRAIN_DATA_PARAMS="--train-data $CCxM_PATH --train-num-samples $CCxM_NUM_SAMPLES --dataset-type webdataset"
 
 TRAIN_PARAMS="--epochs 5 --lr-start 1e-6 --lr 5e-6 --lr-end 1e-7 --resume-only-weights 1 --batch-size 512"
-TRAIN_PARAMS="--epochs 1 --lr-start 1e-6 --lr 5e-6 --lr-end 1e-7 --resume-only-weights 1 --batch-size 512"
+# 8x RTX 2080 Ti (debuggin multiprocessing)
+# TRAIN_PARAMS="--epochs 1 --lr-start 1e-6 --lr 5e-6 --lr-end 1e-7 --resume-only-weights 1 --batch-size 64"
+
 VAL_DATA_PARAMS="--imagenet-val-dir $ROOT_DATA_PATH/imagenet1k/val_per-class"
 
 torchrun --nnodes=1 --nproc_per_node 8 --nnodes=1 main.py \
