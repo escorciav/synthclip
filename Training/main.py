@@ -433,6 +433,7 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
             progress.display(optim_iter)
 
     progress.synchronize()
+    # import ipdb; ipdb.set_trace()
     return {
         **{k: v.avg for k, v in metrics.items()},
         "lr": optimizer.param_groups[0]["lr"],

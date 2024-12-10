@@ -211,6 +211,10 @@ def group_by_keys_nothrow(
     current_sample = None
     for filesample in data:
         assert isinstance(filesample, dict)
+        # NOTE: DEBUG. Uncomment runs but also no samples. EOM - Victor
+        # if "fname" not in filesample or "data" in filesample:
+        #     continue
+
         fname, value = filesample["fname"], filesample["data"]
         prefix, suffix = keys(fname)
         if prefix is None:
@@ -357,6 +361,8 @@ def get_wds_dataset(
     input_shards = args.train_data if is_train else args.val_data
     assert input_shards is not None
     resampled = getattr(args, "dataset_resampled", False) and is_train
+    # NOTE: BREADCRUMB. Didn't fix it. EOM - Victor
+    # resampled = getattr(args, "dataset_resampled", True) and is_train
 
     num_shards = None
     if is_train:
