@@ -17,7 +17,7 @@ python captions_generator.py --save_path synthetic_captions \
 
 - `--save_path`: Directory where the generated captions will be saved.
 - `--generation_idx`: Chunk index that will indicate the start index.
-- `--concept_bank_size`: Number of captions to rewrite at once. (Recommended is -1) 
+- `--concept_bank_size`: Number of captions to rewrite at once. (Recommended is -1)
 - `--metadata`: Path to the metadata JSON.
 
 ### Step 2: Concept Matching

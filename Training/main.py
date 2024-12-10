@@ -57,12 +57,20 @@ def get_args_parser():
         help="path to ImageNet root",
     )
     parser.add_argument(
+        "--imagenet-val-dir",
+        default="/path/to/ImageNet",
+        type=str,
+        help="path to ImageNet val root",
+    )
+    parser.add_argument(
         "--output-dir", default="vitb16-synthclip", type=str, help="output dir"
     )
 
     # Model
     parser.add_argument("--model", default="CLIP_VITB16", type=str)
     parser.add_argument("--resume", default="", type=str, help="path to resume from")
+    parser.add_argument("--resume-only-weights", default=0, choices=[0, 1], type=int,
+                        help="0: weights, epochs, optim; 1: only weights")
 
     # Training
     parser.add_argument("--epochs", default=40, type=int)
@@ -185,24 +193,25 @@ def main(args):
         if os.path.isfile(args.resume):
             print("=> loading resume checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume, map_location="cpu")
-            epoch = checkpoint["epoch"] if "epoch" in checkpoint else 0
-            args.start_epoch = epoch
-            result = model.load_state_dict(checkpoint["state_dict"], strict=False)
-            print(result)
-            (
-                optimizer.load_state_dict(checkpoint["optimizer"])
-                if "optimizer" in checkpoint
-                else ()
-            )
-            (
-                scaler.load_state_dict(checkpoint["scaler"])
-                if "scaler" in checkpoint
-                else ()
-            )
-            best_acc1 = checkpoint["best_acc1"]
-            print(
-                "=> loaded resume checkpoint '{}' (epoch {})".format(args.resume, epoch)
-            )
+            if args.resume_only_weights == 0:
+                epoch = checkpoint["epoch"] if "epoch" in checkpoint else 0
+                args.start_epoch = epoch
+                result = model.load_state_dict(checkpoint["state_dict"], strict=False)
+                print(result)
+                (
+                    optimizer.load_state_dict(checkpoint["optimizer"])
+                    if "optimizer" in checkpoint
+                    else ()
+                )
+                (
+                    scaler.load_state_dict(checkpoint["scaler"])
+                    if "scaler" in checkpoint
+                    else ()
+                )
+                best_acc1 = checkpoint["best_acc1"]
+                print(
+                    "=> loaded resume checkpoint '{}' (epoch {})".format(args.resume, epoch)
+                )
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
     else:
@@ -250,7 +259,11 @@ def main(args):
         args, train_transform, args.start_epoch, tokenizer
     )
 
-    val_dataset = ImageFolder(os.path.join(args.imagenet_root, "val"), val_transform)
+    if os.path.exists(args.imagenet_root):
+        imagenet_val_dir = os.path.join(args.imagenet_root, "val")
+    elif os.path.exists(args.imagenet_val_dir):
+        imagenet_val_dir = args.imagenet_val_dir
+    val_dataset = ImageFolder(imagenet_val_dir, val_transform)
 
     if args.distributed:
         val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset)
