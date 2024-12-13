@@ -1,3 +1,8 @@
+# Logs
+*log*/
+Training/*log*
+Training/wandb
+
 # Model Folders
 *cache
 TextGen/LLMs
