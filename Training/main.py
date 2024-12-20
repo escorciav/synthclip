@@ -21,8 +21,10 @@ import torch.distributed as dist
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
-from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
+import torchvision.utils as vutils
+from PIL import Image
+from torchvision.datasets import ImageFolder
 
 import datasets
 import models
@@ -430,6 +432,9 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
                         "logit": logit_scale,
                     }
                 )
+            if utils.is_main_process() and data_iter == 0:
+                # Save a handful of images from the first batch of each epoch
+                save_images(inputs[0], epoch, args.output_dir)
             progress.display(optim_iter)
 
     progress.synchronize()
@@ -580,6 +585,18 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+
+def save_images(images, epoch, output_dir, num_images=5):
+    # Create a grid of images
+    grid = vutils.make_grid(images[:num_images], nrow=num_images,
+                            normalize=True, scale_each=True)
+    # Convert the grid to a numpy array
+    np_grid = grid.cpu().numpy().transpose((1, 2, 0)) * 255
+    # Convert the numpy array to an image
+    img = Image.fromarray(np_grid.astype('uint8'))
+    # Save the image
+    img.save(os.path.join(output_dir, f'epoch_{epoch}_images.png'))
 
 
 if __name__ == "__main__":
