@@ -75,7 +75,7 @@ fi
 # CC3M
 # CCxM_PATH=$ROOT_DATA_PATH"/cc3m${CCXM_SUFIX}/{000000000..000002876}.tar"
 # CCxM_NUM_SAMPLES=2876999
-# TRAIN_DATA_PARAMS="--train-data $CCxM_PATH --train-num-samples $CCxM_NUM_SAMPLES --dataset-type webdataset"
+# TRAIN_DATA_PARAMS="--train-data $CCxM_PATH --train-num-samples $CCxM_NUM_SAMPLES --dataset-type webdataset --resume $MODEL_CACHE_PATH/synthclip-30m/checkpoint_best.pt"
 # EXP_NAME=vitb16-synthclip-ft
 # TRAIN_PARAMS="--epochs 5 --lr-start 1e-6 --lr 5e-6 --lr-end 1e-7 --resume-only-weights 1 $batch_size"
 # 8x RTX 2080 Ti (debuggin multiprocessing)
@@ -93,7 +93,6 @@ VAL_DATA_PARAMS="--imagenet-val-dir $IMAGENET_VAL_ROOT"
 set -x
 torchrun --nnodes=1 --nproc_per_node $num_gpus main.py \
     $TRAIN_DATA_PARAMS $TRAIN_PARAMS $VAL_DATA_PARAMS \
-    --resume $MODEL_CACHE_PATH/synthclip-30m/checkpoint_best.pt \
     --output-dir $LOG_DIR/$EXP_NAME --wandb
     # --output-dir $LOG_DIR/$(date +%Y-%m-%d-%H-%M-%S)_$EXP_NAME --save-images
 
