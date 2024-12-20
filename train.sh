@@ -46,7 +46,7 @@ elif [[ $hostname == *"gpu-node"* ]]; then
     # conda activate synthclip-train
     WORK_DIR=$HOME/fss-me/synthclip
     num_gpus=4
-    batch_size="--batch-size 4096 --update-freq 1"
+    batch_size="4096 --update-freq 1"
     ROOT_DATA_PATH=/ephemeral/persistent-data
     MODEL_CACHE_PATH=/fss-me/model-zoo
     IMAGENET_VAL_ROOT=$ROOT_DATA_PATH/clip_eval/imagenet1k/val
@@ -90,6 +90,7 @@ TRAIN_PARAMS="--epochs 40 --warmup-epochs 1 --batch-size $batch_size --lr 5e-4 -
 # Validation data
 VAL_DATA_PARAMS="--imagenet-val-dir $IMAGENET_VAL_ROOT"
 
+set -x
 torchrun --nnodes=1 --nproc_per_node $num_gpus main.py \
     $TRAIN_DATA_PARAMS $TRAIN_PARAMS $VAL_DATA_PARAMS \
     --resume $MODEL_CACHE_PATH/synthclip-30m/checkpoint_best.pt \
