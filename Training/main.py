@@ -23,7 +23,7 @@ import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from torchvision.datasets import ImageFolder
 
 import datasets
@@ -138,6 +138,7 @@ def get_args_parser():
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--gpu", default=None, type=int, help="GPU id to use.")
     parser.add_argument("--wandb", action="store_true", help="Enable WandB logging")
+    parser.add_argument("--save-images", action="store_true", help="Save images during training")
     return parser
 
 
@@ -387,6 +388,8 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
         for k, param_group in enumerate(optimizer.param_groups):
             param_group["lr"] = lr_schedule[it]
 
+        if len(inputs) == 3:
+            *inputs, raw_text = inputs
         inputs = [tensor.cuda(args.gpu, non_blocking=True) for tensor in inputs]
 
         # compute output
@@ -432,9 +435,9 @@ def train(train_loader, model, criterion, optimizer, scaler, epoch, lr_schedule,
                         "logit": logit_scale,
                     }
                 )
-            if utils.is_main_process() and data_iter == 0:
+            if utils.is_main_process() and (data_iter == 0 or args.save_images):
                 # Save a handful of images from the first batch of each epoch
-                save_images(inputs[0], epoch, args.output_dir)
+                save_images(inputs[0], raw_text, epoch, args.output_dir)
             progress.display(optim_iter)
 
     progress.synchronize()
@@ -587,16 +590,36 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def save_images(images, epoch, output_dir, num_images=5):
+def save_images(inputs, raw_text, epoch, output_dir, num_images=5, font_size=12):
     # Create a grid of images
-    grid = vutils.make_grid(images[:num_images], nrow=num_images,
-                            normalize=True, scale_each=True)
-    # Convert the grid to a numpy array
+    grid = vutils.make_grid(inputs[:num_images], nrow=num_images, 
+                           normalize=True, scale_each=True)
+    # Convert the grid to a numpy array 
     np_grid = grid.cpu().numpy().transpose((1, 2, 0)) * 255
     # Convert the numpy array to an image
     img = Image.fromarray(np_grid.astype('uint8'))
-    # Save the image
-    img.save(os.path.join(output_dir, f'epoch_{epoch}_images.png'))
+    
+    # Create a new image with extra height for the text
+    extra_height = int(font_size * 1.2 * num_images)
+    final_img = Image.new('RGB', (img.width, img.height + extra_height), (255, 255, 255))
+    # Paste the image grid
+    final_img.paste(img, (0, 0))
+    
+    # Add the text below the images
+    draw = ImageDraw.Draw(final_img)
+    try:
+        font = ImageFont.truetype('arial.ttf', font_size)
+    except OSError:
+        font = ImageFont.load_default()
+        
+    captions = raw_text[:num_images]
+    caption_text = '\n'.join(str(c) for c in captions)
+        
+    draw.text((10, img.height + 5), caption_text, fill=(0, 0, 0), font=font)
+    
+    # Save the final image
+    filename = f'images-epoch_{epoch}.jpg'
+    final_img.save(os.path.join(output_dir, filename))
 
 
 if __name__ == "__main__":
