@@ -10,6 +10,7 @@ import math
 import os
 import sys
 import time
+from pathlib import Path
 import wandb
 
 import numpy as np
@@ -50,6 +51,7 @@ def get_args_parser():
     parser.add_argument("--csv-img-key", default="image_path", type=str)
     parser.add_argument("--csv-caption-key", default="caption", type=str)
     parser.add_argument("--csv_separator", default="\t", type=str)
+    parser.add_argument("--csv_prefix", default=None, type=Path)
     parser.add_argument("--train-num-samples", default=2576776, type=int)
     parser.add_argument("--train-data-upsampling-factors", default=None, type=int)
     parser.add_argument(

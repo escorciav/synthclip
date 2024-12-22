@@ -51,6 +51,10 @@ elif [[ $hostname == *"gpu-node"* ]]; then
     MODEL_CACHE_PATH=/fss-me/model-zoo
     IMAGENET_VAL_ROOT=$ROOT_DATA_PATH/clip_eval/imagenet1k/val
     LOG_DIR=$HOME/fss-me/slip_logs
+    WAND_KEY=~/fss-me/.netrc
+    if [ -f $WAND_KEY ]; then
+        ln -s $WAND_KEY ~/fss-me/.netrc
+    fi
 else
     echo "Hostname does not match any known patterns. Please check the hostname and update the script accordingly."
     exit 1
@@ -68,6 +72,10 @@ echo "LOG_DIR: $LOG_DIR"
 if [[ -n $CCXM_SUFIX ]]; then
     echo "CCXM_SUFIX: $CCXM_SUFIX"
 fi
+# wadbn setup
+if [ -z "$WORK_DIR" ]; then
+    export WANDB_MODE=offline
+fi
 
 # CC12M
 # CCxM_PATH=$ROOT_DATA_PATH"/cc12m/{000000000..000010503}.tar"
@@ -83,7 +91,7 @@ fi
 
 # SynthCI
 DATA_PATH=$ROOT_DATA_PATH/SynthCI-30/3m.csv
-TRAIN_DATA_PARAMS="--train-data $DATA_PATH --dataset-type csv --workers 6"
+TRAIN_DATA_PARAMS="--train-data $DATA_PATH --dataset-type csv --workers 6 --csv-prefix $ROOT_DATA_PATH/SynthCI-30/data"
 EXP_NAME=vitb16-synthclip-scratch-3m
 TRAIN_PARAMS="--epochs 40 --warmup-epochs 1 --batch-size $batch_size --lr 5e-4 --wd 0.5"
 

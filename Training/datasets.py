@@ -39,12 +39,14 @@ except ImportError:
 
 class CsvDataset(Dataset):
     def __init__(
-        self, input_filename, transforms, img_key, caption_key, sep="\t", tokenizer=None
+        self, input_filename, transforms, img_key, caption_key, sep="\t", tokenizer=None,
+        prefix=None
     ):
         logging.debug(f"Loading csv data from {input_filename}.")
         df = pd.read_csv(input_filename, sep=sep)
 
         self.images = df[img_key].tolist()
+        self.prefix = prefix    
         self.captions = df[caption_key].tolist()
         self.transforms = transforms
         logging.debug("Done loading data.")
@@ -55,7 +57,10 @@ class CsvDataset(Dataset):
         return len(self.captions)
 
     def __getitem__(self, idx):
-        images = self.transforms(Image.open(str(self.images[idx])).convert("RGB"))
+        img_path = self.images[idx]
+        if self.prefix is not None:
+            self.images = self.prefix / img_path
+        images = self.transforms(Image.open(str(img_path)).convert("RGB"))
         texts = self.tokenize([str(self.captions[idx])])[0]
         return images, texts
 
@@ -508,6 +513,7 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None):
         caption_key=args.csv_caption_key,
         sep=args.csv_separator,
         tokenizer=tokenizer,
+        prefix=args.csv_prefix
     )
     num_samples = len(dataset)
     sampler = DistributedSampler(dataset) if args.distributed and is_train else None
